@@ -1,13 +1,14 @@
-# AI Cybersecurity Threat Detection System
+AI Cybersecurity Threat Detection System
 
 ## Project Overview
-This project is an AI-powered cybersecurity monitoring system that analyzes network traffic and detects potential threats.
+This project is an AI-powered cybersecurity monitoring system that analyzes network traffic and detects potential security threats. It helps users identify suspicious activities and improve network security.
 
 ## Features
-- Real-time network traffic monitoring
+- Real-time threat monitoring
 - AI-based threat detection
 - Threat severity classification
 - Downloadable threat reports
+- User-friendly dashboard
 - Security alert generation
 
 ## Technologies Used
@@ -21,11 +22,18 @@ This project is an AI-powered cybersecurity monitoring system that analyzes netw
 
 ## Installation Steps
 1. Clone the repository
-2. Install dependencies
+2. Install the required packages
 3. Run app.py
+4. Open the application in your browse
 
 ## Future Enhancements
 - Cloud deployment
-- Email alerts
+- Email notifications
 - Database integration
 - Advanced AI models
+- Real-time attack visualization
+
+## Author
+Mahesh Goud
+B.Tech Student
+
