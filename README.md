@@ -1,75 +1,21 @@
-# AI-Driven Threat Detection System
+# AI-Based Threat Detection System
 
 ## Project Overview
+AI-powered cybersecurity threat detection and monitoring system.
 
-The AI-Driven Threat Detection System is a cybersecurity project that uses Machine Learning to detect suspicious login activities and potential threats.
+## Features
+- Real-time threat detection
+- Threat classification
+- Downloadable reports
+- User-friendly dashboard
 
-The system analyzes:
-- Login time
-- Failed login attempts
-- IP risk score
-
-Using the Isolation Forest algorithm, the system predicts whether user activity is normal or suspicious.
-
----
-
-# Features
-
-- AI-Based Threat Detection
-- Login Monitoring System
-- Real-Time Threat Prediction
-- Interactive Dashboard
-- Threat Alerts
-- Downloadable Threat Reports
-- Threat Logging System
-- Dark Theme Cybersecurity UI
-- Admin Login Authentication
-
----
-
-# Technologies Used
-
+## Technologies Used
 - Python
-- Streamlit
-- Pandas
-- Scikit-learn
-- Matplotlib
+- Flask
+- Machine Learning
+- HTML
+- CSS
+- JavaScript
 
----
-
-# Machine Learning Algorithm
-
-Isolation Forest
-
----
-
-# Project Structure
-
-AI-Driven-Threat-Detection-System/
-
-│
-
-├── dashboard.py
-
-├── models.py
-
-├── README.md
-
-├── requirements.txt
-
-├── alerts.txt
-
-│
-
-├── dataset/
-
-│ └── logins.csv
-
----
-
-# How to Run Project
-
-## Install Required Libraries
-
-```bash
-pip install -r requirements.txt
+## Author
+Mahesh Goud
