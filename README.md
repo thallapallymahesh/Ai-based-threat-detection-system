@@ -24,9 +24,6 @@ This project is an AI-powered cybersecurity monitoring system that analyzes netw
 2. Install dependencies
 3. Run app.py
 
-## Screenshots
-(Add screenshots here)
-
 ## Future Enhancements
 - Cloud deployment
 - Email alerts
