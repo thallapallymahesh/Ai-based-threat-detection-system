@@ -145,35 +145,46 @@ if username == USERNAME and password == PASSWORD:
         st.success("✅ System Secure")
 
     # -----------------------------------
-    # BAR CHART
-    # -----------------------------------
+# BAR CHART
+# -----------------------------------
 
-    st.subheader("Failed Login Attempts")
+st.subheader("Failed Login Attempts")
 
-    st.bar_chart(data['failed_attempts'])
+fig, ax = plt.subplots(figsize=(8, 3))
+
+ax.bar(
+    range(len(data)),
+    data["failed_attempts"]
+)
+
+ax.set_xlabel("User Records")
+ax.set_ylabel("Failed Attempts")
+ax.set_title("Failed Login Attempts Analysis")
+
+st.pyplot(fig)
 
     # -----------------------------------
     # PIE CHART
     # -----------------------------------
 
-    st.subheader("Threat Distribution")
+st.subheader("Threat Distribution")
 
-    fig, ax = plt.subplots()
+fig, ax = plt.subplots(figsize=(3, 3))
 
-    data['prediction'].value_counts().plot.pie(
-        autopct='%1.1f%%',
-        ax=ax
-    )
+data['prediction'].value_counts().plot.pie(
+    autopct='%1.1f%%',
+    ax=ax
+)
 
-    st.pyplot(fig)
+st.pyplot(fig)
 
     # -----------------------------------
     # DOWNLOAD REPORT
     # -----------------------------------
 
-    csv = data.to_csv(index=False)
+csv = data.to_csv(index=False)
 
-    st.download_button(
+st.download_button(
         label="Download Threat Report",
         data=csv,
         file_name='threat_report.csv',
@@ -181,61 +192,105 @@ if username == USERNAME and password == PASSWORD:
     )
 
     # -----------------------------------
-    # LIVE THREAT PREDICTION
-    # -----------------------------------
+# LIVE THREAT PREDICTION
+# -----------------------------------
 
-    st.subheader("Live Threat Prediction")
+st.subheader("Live Threat Prediction")
 
-    login_time = st.number_input(
-        "Login Time",
-        0,
-        23
-    )
+username_input = st.text_input("Username")
 
-    failed_attempts = st.number_input(
-        "Failed Attempts",
-        0,
-        10
-    )
+login_time = st.number_input(
+    "Login Time",
+    0,
+    23
+)
 
-    ip_score = st.number_input(
-        "IP Score",
-        0,
-        10
-    )
+failed_attempts = st.number_input(
+    "Failed Attempts",
+    0,
+    10
+)
 
-    if st.button("Predict Threat"):
+ip_score = st.number_input(
+    "IP Score",
+    0,
+    10
+)
 
-        new_data = [[
-            login_time,
-            failed_attempts,
-            ip_score
-        ]]
+if st.button("Predict Threat"):
 
-        prediction = model.predict(new_data)
+    new_data = [[
+        login_time,
+        failed_attempts,
+        ip_score
+    ]]
 
-        current_time = datetime.now()
+    prediction = model.predict(new_data)
 
-        # -----------------------------------
-        # THREAT DETECTION
-        # -----------------------------------
+    current_time = datetime.now()
 
-        if prediction[0] == -1:
+    if prediction[0] == -1:
 
-            st.error(
-                "⚠️ Suspicious Activity Detected!"
+        result = "Suspicious"
+
+        st.error(
+            "⚠️ Suspicious Activity Detected!"
+        )
+
+        with open("alerts.txt", "a") as file:
+
+            file.write(
+                f"Threat detected at {current_time}\n"
             )
 
-            # SAVE ALERT LOG
-            with open("alerts.txt", "a") as file:
+    else:
 
-                file.write(
-                    f"Threat detected at {current_time}\n"
-                )
+        result = "Normal"
 
-        else:
+        st.success(
+            "✅ Normal Activity"
+        )
 
-            st.success("✅ Normal Activity")
+    # -----------------------------------
+    # ADD NEW RECORD TO DATASET
+    # -----------------------------------
+
+    if username_input == "":
+        username_input = "live_user"
+
+    new_row = pd.DataFrame({
+
+        "username": [username_input],
+
+        "login_time": [login_time],
+
+        "failed_attempts": [failed_attempts],
+
+        "ip_score": [ip_score],
+
+        "status": ["live"],
+
+        "prediction": [result]
+
+    })
+
+    data = pd.concat(
+        [data, new_row],
+        ignore_index=True
+    )
+
+    # SAVE UPDATED DATASET
+
+    data.to_csv(
+        "dataset/logins.csv",
+        index=False
+    )
+
+    st.success(
+        "Record Added Successfully"
+    )
+
+    st.rerun()
 
 # -----------------------------------
 # INVALID LOGIN
