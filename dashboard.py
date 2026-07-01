@@ -195,6 +195,7 @@ st.download_button(
 # LIVE THREAT PREDICTION
 # -----------------------------------
 
+
 st.subheader("Live Threat Prediction")
 
 username_input = st.text_input("Username")
@@ -219,6 +220,8 @@ ip_score = st.number_input(
 
 if st.button("Predict Threat"):
 
+    from db import conn, cursor
+
     new_data = [[
         login_time,
         failed_attempts,
@@ -237,11 +240,28 @@ if st.button("Predict Threat"):
             "⚠️ Suspicious Activity Detected!"
         )
 
+        # Save alert to alerts.txt
         with open("alerts.txt", "a") as file:
 
             file.write(
                 f"Threat detected at {current_time}\n"
             )
+
+        # Save alert to MySQL
+        cursor.execute(
+            """
+            INSERT INTO alerts
+            (username, alert_message, alert_time)
+            VALUES (%s, %s, %s)
+            """,
+            (
+                username_input,
+                "Threat Detected",
+                current_time
+            )
+        )
+
+        conn.commit()
 
     else:
 
@@ -279,7 +299,31 @@ if st.button("Predict Threat"):
         ignore_index=True
     )
 
-    # SAVE UPDATED DATASET
+    # -----------------------------------
+    # SAVE RECORD TO MYSQL
+    # -----------------------------------
+
+    sql = """
+    INSERT INTO logins
+    (username, login_time, failed_attempts, ip_score, status, prediction)
+    VALUES (%s, %s, %s, %s, %s, %s)
+    """
+
+    values = (
+        username_input,
+        login_time,
+        failed_attempts,
+        ip_score,
+        "live",
+        result
+    )
+
+    cursor.execute(sql, values)
+    conn.commit()
+
+    # -----------------------------------
+    # SAVE UPDATED CSV
+    # -----------------------------------
 
     data.to_csv(
         "dataset/logins.csv",
