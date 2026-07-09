@@ -3,6 +3,7 @@ import pandas as pd
 from sklearn.ensemble import IsolationForest
 import matplotlib.pyplot as plt
 from datetime import datetime
+from db import conn, cursor
 
 # -----------------------------------
 # PAGE CONFIG
@@ -18,26 +19,26 @@ st.set_page_config(
 # -----------------------------------
 
 st.markdown("""
-    <style>
-    body {
-        background-color: #0E1117;
-        color: white;
-    }
+<style>
+body {
+    background-color: #0E1117;
+    color: white;
+}
 
-    .stApp {
-        background-color: #0E1117;
-    }
+.stApp {
+    background-color: #0E1117;
+}
 
-    h1, h2, h3 {
-        color: #ff4b4b;
-    }
+h1, h2, h3 {
+    color: #ff4b4b;
+}
 
-    .stButton>button {
-        background-color: red;
-        color: white;
-        border-radius: 10px;
-    }
-    </style>
+.stButton>button {
+    background-color: red;
+    color: white;
+    border-radius: 10px;
+}
+</style>
 """, unsafe_allow_html=True)
 
 # -----------------------------------
@@ -91,11 +92,11 @@ if username == USERNAME and password == PASSWORD:
 
     model.fit(X)
 
-    data['prediction'] = model.predict(X)
+    data["prediction"] = model.predict(X)
 
-    data['prediction'] = data['prediction'].map({
-        1: 'Normal',
-        -1: 'Suspicious'
+    data["prediction"] = data["prediction"].map({
+        1: "Normal",
+        -1: "Suspicious"
     })
 
     # -----------------------------------
@@ -103,7 +104,6 @@ if username == USERNAME and password == PASSWORD:
     # -----------------------------------
 
     st.subheader("Login Activity Dataset")
-
     st.write(data)
 
     # -----------------------------------
@@ -113,7 +113,7 @@ if username == USERNAME and password == PASSWORD:
     st.subheader("Suspicious Users")
 
     suspicious_users = data[
-        data['prediction'] == 'Suspicious'
+        data["prediction"] == "Suspicious"
     ]
 
     st.write(suspicious_users)
@@ -124,10 +124,14 @@ if username == USERNAME and password == PASSWORD:
 
     threat_count = len(suspicious_users)
 
-    col1, col2 = st.columns(2)
+    cursor.execute("SELECT COUNT(*) FROM logins")
+    total_mysql = cursor.fetchone()[0]
 
-    col1.metric("Total Users", len(data))
-    col2.metric("Threats Detected", threat_count)
+    col1, col2, col3 = st.columns(3)
+
+    col1.metric("CSV Records", len(data))
+    col2.metric("MySQL Records", total_mysql)
+    col3.metric("Threats Detected", threat_count)
 
     # -----------------------------------
     # ALERTS
@@ -145,196 +149,274 @@ if username == USERNAME and password == PASSWORD:
         st.success("✅ System Secure")
 
     # -----------------------------------
-# BAR CHART
-# -----------------------------------
-
-st.subheader("Failed Login Attempts")
-
-fig, ax = plt.subplots(figsize=(8, 3))
-
-ax.bar(
-    range(len(data)),
-    data["failed_attempts"]
-)
-
-ax.set_xlabel("User Records")
-ax.set_ylabel("Failed Attempts")
-ax.set_title("Failed Login Attempts Analysis")
-
-st.pyplot(fig)
-
+    # RECENT ALERTS FROM MYSQL
     # -----------------------------------
+
+    st.subheader("Recent Alerts")
+
+    cursor.execute("""
+        SELECT username, alert_message, alert_time
+        FROM alerts
+        ORDER BY alert_time DESC
+        LIMIT 5
+    """)
+
+    alerts = cursor.fetchall()
+
+    if alerts:
+
+        alert_df = pd.DataFrame(
+            alerts,
+            columns=[
+                "Username",
+                "Alert",
+                "Time"
+            ]
+        )
+
+        st.dataframe(
+            alert_df,
+            use_container_width=True
+        )
+
+    else:
+
+        st.info("No Alerts Found")
+
+        # -----------------------------------
+    # BAR CHART
+    # -----------------------------------
+
+    st.subheader("Failed Login Attempts by User")
+
+    fig, ax = plt.subplots(figsize=(10, 5))
+
+    bars = ax.bar(
+        data["username"],
+        data["failed_attempts"],
+        edgecolor="black",
+        linewidth=1
+    )
+
+    # Show values on top of each bar
+    for bar in bars:
+        height = bar.get_height()
+        ax.text(
+            bar.get_x() + bar.get_width()/2,
+            height + 0.1,
+            str(int(height)),
+            ha="center",
+            fontsize=9,
+            fontweight="bold"
+        )
+
+    ax.set_title("Failed Login Attempts", fontsize=14, fontweight="bold")
+    ax.set_xlabel("Users", fontsize=11)
+    ax.set_ylabel("Failed Attempts", fontsize=11)
+
+    plt.xticks(rotation=45, ha="right")
+
+    ax.grid(axis="y", linestyle="--", alpha=0.5)
+
+    plt.tight_layout()
+
+    st.pyplot(fig)
+
+
+        # -----------------------------------
     # PIE CHART
     # -----------------------------------
 
-st.subheader("Threat Distribution")
+    st.subheader("🛡️ Threat Distribution")
 
-fig, ax = plt.subplots(figsize=(3, 3))
+    fig, ax = plt.subplots(figsize=(6, 6))
 
-data['prediction'].value_counts().plot.pie(
-    autopct='%1.1f%%',
-    ax=ax
-)
+    counts = data["prediction"].value_counts()
 
-st.pyplot(fig)
+    colors = ["#2F80ED", "#EB5757"]  # Blue, Red
 
-    # -----------------------------------
-    # DOWNLOAD REPORT
-    # -----------------------------------
-
-csv = data.to_csv(index=False)
-
-st.download_button(
-        label="Download Threat Report",
-        data=csv,
-        file_name='threat_report.csv',
-        mime='text/csv',
+    wedges, texts, autotexts = ax.pie(
+        counts,
+        labels=counts.index,
+        colors=colors,
+        autopct="%1.1f%%",
+        startangle=90,
+        pctdistance=0.62,
+        textprops={
+            "fontsize": 12,
+            "fontweight": "bold",
+            "color": "white"
+        },
+        wedgeprops={
+            "edgecolor": "white",
+            "linewidth": 2
+        }
     )
 
-    # -----------------------------------
-# LIVE THREAT PREDICTION
-# -----------------------------------
+    ax.set_aspect("equal")
 
+    # Legend below the chart
+    ax.legend(
+        wedges,
+        [f"{label} ({value:.1f}%)"
+         for label, value in zip(
+             counts.index,
+             counts / counts.sum() * 100
+         )],
+        loc="lower center",
+        bbox_to_anchor=(0.5, -0.08),
+        ncol=2,
+        fontsize=11,
+        frameon=False
+    )
+
+    st.pyplot(fig)
+
+        # DOWNLOAD REPORT
+    csv = data.to_csv(index=False)
+
+    st.download_button(
+        label="Download Threat Report",
+        data=csv,
+        file_name="threat_report.csv",
+        mime="text/csv",
+    )
+
+        # -----------------------------------
+        # LIVE THREAT PREDICTION
+        # -----------------------------------
 
 st.subheader("Live Threat Prediction")
 
 username_input = st.text_input("Username")
 
 login_time = st.number_input(
-    "Login Time",
-    0,
-    23
-)
-
+            "Login Time",
+            0,
+            23
+        )
 failed_attempts = st.number_input(
-    "Failed Attempts",
-    0,
-    10
-)
+            "Failed Attempts",
+            0,
+            10
+        )
 
 ip_score = st.number_input(
-    "IP Score",
-    0,
-    10
-)
+            "IP Score",
+            0,
+            10
+        )
 
 if st.button("Predict Threat"):
 
-    from db import conn, cursor
+            new_data = [[
+                login_time,
+                failed_attempts,
+                ip_score
+            ]]
 
-    new_data = [[
-        login_time,
-        failed_attempts,
-        ip_score
-    ]]
+            prediction = model.predict(new_data)
 
-    prediction = model.predict(new_data)
+            current_time = datetime.now()
 
-    current_time = datetime.now()
+            if prediction[0] == -1:
 
-    if prediction[0] == -1:
+                result = "Suspicious"
 
-        result = "Suspicious"
+                st.error(
+                    "⚠️ Suspicious Activity Detected!"
+                )
 
-        st.error(
-            "⚠️ Suspicious Activity Detected!"
-        )
+                # Save alert to alerts.txt
+                with open("alerts.txt", "a") as file:
 
-        # Save alert to alerts.txt
-        with open("alerts.txt", "a") as file:
+                    file.write(
+                        f"Threat detected at {current_time}\n"
+                    )
 
-            file.write(
-                f"Threat detected at {current_time}\n"
+                # Save alert to MySQL
+                cursor.execute(
+                    """
+                    INSERT INTO alerts
+                    (username, alert_message, alert_time)
+                    VALUES (%s, %s, %s)
+                    """,
+                    (
+                        username_input,
+                        "Threat Detected",
+                        current_time
+                    )
+                )
+
+                conn.commit()
+
+            else:
+
+                result = "Normal"
+
+                st.success(
+                    "✅ Normal Activity"
+                )
+
+            # -----------------------------------
+            # ADD NEW RECORD
+            # -----------------------------------
+
+            if username_input == "":
+                username_input = "live_user"
+
+            new_row = pd.DataFrame({
+
+                "username": [username_input],
+                "login_time": [login_time],
+                "failed_attempts": [failed_attempts],
+                "ip_score": [ip_score],
+                "status": ["live"],
+                "prediction": [result]
+
+            })
+
+            data = pd.concat(
+                [data, new_row],
+                ignore_index=True
             )
 
-        # Save alert to MySQL
-        cursor.execute(
+            # -----------------------------------
+            # SAVE TO MYSQL
+            # -----------------------------------
+
+            sql = """
+            INSERT INTO logins
+            (username, login_time, failed_attempts, ip_score, status, prediction)
+            VALUES (%s, %s, %s, %s, %s, %s)
             """
-            INSERT INTO alerts
-            (username, alert_message, alert_time)
-            VALUES (%s, %s, %s)
-            """,
-            (
+
+            values = (
                 username_input,
-                "Threat Detected",
-                current_time
+                login_time,
+                failed_attempts,
+                ip_score,
+                "live",
+                result
             )
-        )
 
-        conn.commit()
+            cursor.execute(sql, values)
+            conn.commit()
 
-    else:
+            # -----------------------------------
+            # SAVE TO CSV
+            # -----------------------------------
 
-        result = "Normal"
+            data.to_csv(
+                "dataset/logins.csv",
+                index=False
+            )
 
-        st.success(
-            "✅ Normal Activity"
-        )
+            st.success(
+                "Record Added Successfully"
+            )
 
-    # -----------------------------------
-    # ADD NEW RECORD TO DATASET
-    # -----------------------------------
-
-    if username_input == "":
-        username_input = "live_user"
-
-    new_row = pd.DataFrame({
-
-        "username": [username_input],
-
-        "login_time": [login_time],
-
-        "failed_attempts": [failed_attempts],
-
-        "ip_score": [ip_score],
-
-        "status": ["live"],
-
-        "prediction": [result]
-
-    })
-
-    data = pd.concat(
-        [data, new_row],
-        ignore_index=True
-    )
-
-    # -----------------------------------
-    # SAVE RECORD TO MYSQL
-    # -----------------------------------
-
-    sql = """
-    INSERT INTO logins
-    (username, login_time, failed_attempts, ip_score, status, prediction)
-    VALUES (%s, %s, %s, %s, %s, %s)
-    """
-
-    values = (
-        username_input,
-        login_time,
-        failed_attempts,
-        ip_score,
-        "live",
-        result
-    )
-
-    cursor.execute(sql, values)
-    conn.commit()
-
-    # -----------------------------------
-    # SAVE UPDATED CSV
-    # -----------------------------------
-
-    data.to_csv(
-        "dataset/logins.csv",
-        index=False
-    )
-
-    st.success(
-        "Record Added Successfully"
-    )
-
-    st.rerun()
+            st.rerun()
 
 # -----------------------------------
 # INVALID LOGIN

@@ -5,3 +5,10 @@ Threat detected at 2026-05-23 16:25:43.992643
 Threat detected at 2026-05-23 16:25:48.193039
 Threat detected at 2026-06-09 15:46:19.025412
 Threat detected at 2026-07-01 16:06:23.526391
+Threat detected at 2026-07-01 17:17:26.448088
+Threat detected at 2026-07-01 17:18:12.258598
+Threat detected at 2026-07-01 17:18:19.343520
+Threat detected at 2026-07-01 17:18:23.377211
+Threat detected at 2026-07-09 20:37:15.317954
+Threat detected at 2026-07-09 20:37:20.849659
+Threat detected at 2026-07-09 20:37:29.166651
