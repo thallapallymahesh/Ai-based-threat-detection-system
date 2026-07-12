@@ -1,10 +1,18 @@
 import mysql.connector
 
-conn = mysql.connector.connect(
-    host="localhost",
-    user="root",
-    password="",   # Replace with your MySQL password if you have one
-    database="threat_detection"
-)
+try:
+    conn = mysql.connector.connect(
+        host="sql12.freesqldatabase.com",
+        port=3306,
+        user="sql12832834",
+        password="yrZ8Zxg9mv",
+        database="sql12832834",
+        autocommit=True,
+        connection_timeout=30
+    )
 
-cursor = conn.cursor()
+    cursor = conn.cursor()
+    print("Connected successfully!")
+
+except Exception as e:
+    print(e)

@@ -123,6 +123,8 @@ if username == USERNAME and password == PASSWORD:
     # -----------------------------------
 
     threat_count = len(suspicious_users)
+    if not conn.is_connected():
+        conn.reconnect()
 
     cursor.execute("SELECT COUNT(*) FROM logins")
     total_mysql = cursor.fetchone()[0]

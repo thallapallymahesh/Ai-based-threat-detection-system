@@ -16,7 +16,7 @@ teja,13,0,1,normal,Normal
 systemadmin,1,9,10,suspicious,Suspicious
 anil,20,1,2,normal,Normal
 guest123,4,6,8,suspicious,Suspicious
-charan,15,0,1,normal,Normal
+charan,15,0,1,normal,Suspicious
 developer,11,1,2,normal,Normal
 unknown,0,10,10,suspicious,Suspicious
 mahesh,10,0,1,live,Normal
@@ -46,3 +46,6 @@ live_user,18,2,3,live,Normal
 live_user,18,2,3,live,Normal
 live_user,18,2,3,live,Normal
 guest,18,2,3,live,Normal
+david,12,1,2,live,Normal
+david,12,1,2,live,Normal
+mahesh,10,0,1,live,Normal
